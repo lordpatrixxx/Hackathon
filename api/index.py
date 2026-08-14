@@ -9,5 +9,5 @@ if str(root_dir) not in sys.path:
 
 from backend.api import app
 
-# Vercel entrypoint
+# Export ASGI app
 handler = app

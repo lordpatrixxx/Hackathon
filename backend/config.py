@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+IS_VERCEL = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+
 
 def get_setting(name: str, default: Optional[str] = None) -> str:
     value = os.getenv(name)
@@ -15,8 +17,8 @@ def get_setting(name: str, default: Optional[str] = None) -> str:
 
 
 class Settings:
-    DATA_DIR: str = get_setting("DATA_DIR", "./data")
-    VECTOR_DB_DIR: str = get_setting("VECTOR_DB_DIR", "./chroma_db")
+    DATA_DIR: str = get_setting("DATA_DIR", "/tmp/data" if IS_VERCEL else "./data")
+    VECTOR_DB_DIR: str = get_setting("VECTOR_DB_DIR", "/tmp/chroma_db" if IS_VERCEL else "./chroma_db")
     COLLECTION_NAME: str = get_setting("COLLECTION_NAME", "finance_rag")
     EMBEDDING_MODEL: str = get_setting("EMBEDDING_MODEL", "nomic-embed-text")
     LLM_PROVIDER: str = get_setting("LLM_PROVIDER", "ollama")
@@ -36,5 +38,12 @@ settings = Settings()
 
 
 def ensure_paths() -> None:
-    Path(settings.DATA_DIR).mkdir(parents=True, exist_ok=True)
-    Path(settings.VECTOR_DB_DIR).mkdir(parents=True, exist_ok=True)
+    try:
+        Path(settings.DATA_DIR).mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+
+    try:
+        Path(settings.VECTOR_DB_DIR).mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
