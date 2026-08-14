@@ -63,3 +63,4 @@ desktop.ini
 # Logs
 *.log
 logs/
+cloudflared.exe
