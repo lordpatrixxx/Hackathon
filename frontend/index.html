@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance RAG Intelligence • AI Odyssey</title>
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      :root {
+        --bg-main: #0a0f1d;
+        --bg-card: #111827;
+        --bg-chat: #0e1526;
+        --bg-panel: #161f33;
+        --border-color: rgba(255, 255, 255, 0.08);
+        --accent-blue: #3b82f6;
+        --accent-cyan: #06b6d4;
+        --accent-green: #10b981;
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        --bubble-user: #2563eb;
+        --bubble-bot: #1a233a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: radial-gradient(circle at 50% 0%, #172554, var(--bg-main) 60%);
+        color: var(--text-main);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .container {
+        max-width: 1100px;
+        width: 95%;
+        margin: 24px auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        flex: 1;
+      }
+
+      .header-card {
+        background: rgba(17, 24, 39, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .brand p {
+        margin: 2px 0 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .system-status {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: rgba(15, 23, 42, 0.7);
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: 1px solid var(--border-color);
+        font-size: 0.85rem;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent-green);
+        display: inline-block;
+        box-shadow: 0 0 10px var(--accent-green);
+      }
+
+      .chat-card {
+        background: rgba(17, 24, 39, 0.95);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 580px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+      }
+
+      .topics-bar {
+        display: flex;
+        gap: 8px;
+        padding: 12px 20px;
+        background: rgba(22, 31, 51, 0.6);
+        border-bottom: 1px solid var(--border-color);
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .topic-pill {
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        color: #93c5fd;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .topic-pill:hover {
+        background: rgba(59, 130, 246, 0.25);
+        border-color: var(--accent-blue);
+        color: #fff;
+      }
+
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        background: var(--bg-chat);
+      }
+
+      .message-row {
+        display: flex;
+        flex-direction: column;
+        max-width: 85%;
+      }
+
+      .message-row.user {
+        align-self: flex-end;
+        align-items: flex-end;
+      }
+
+      .message-row.assistant {
+        align-self: flex-start;
+        align-items: flex-start;
+      }
+
+      .bubble {
+        padding: 14px 18px;
+        border-radius: 16px;
+        line-height: 1.55;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        word-break: break-word;
+      }
+
+      .user .bubble {
+        background: var(--bubble-user);
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+      }
+
+      .assistant .bubble {
+        background: var(--bubble-bot);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-bottom-left-radius: 4px;
+      }
+
+      .bubble h1, .bubble h2, .bubble h3, .bubble h4 {
+        margin-top: 10px;
+        margin-bottom: 6px;
+        color: #60a5fa;
+      }
+
+      .bubble table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+        font-size: 0.88rem;
+      }
+
+      .bubble th, .bubble td {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 6px 10px;
+        text-align: left;
+      }
+
+      .bubble th {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .bubble ul, .bubble ol {
+        margin: 6px 0;
+        padding-left: 22px;
+      }
+
+      .sources-container {
+        margin-top: 10px;
+        padding: 10px 14px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        font-size: 0.82rem;
+        width: 100%;
+      }
+
+      .sources-title {
+        font-weight: 600;
+        color: var(--accent-cyan);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .source-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 4px 8px;
+        border-radius: 6px;
+        margin: 3px 4px 3px 0;
+        color: var(--text-muted);
+      }
+
+      .composer {
+        padding: 16px 20px;
+        background: rgba(22, 31, 51, 0.8);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .input-field {
+        flex: 1;
+        background: rgba(11, 17, 32, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 14px 18px;
+        color: var(--text-main);
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .input-field:focus {
+        border-color: var(--accent-blue);
+      }
+
+      .send-btn {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 24px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.15s, opacity 0.15s;
+      }
+
+      .send-btn:hover {
+        opacity: 0.92;
+        transform: translateY(-1px);
+      }
+
+      .send-btn:active {
+        transform: translateY(0);
+      }
+
+      .meta-latency {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+        align-self: flex-start;
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header-card">
+        <div class="brand">
+          <div class="logo-icon">FR</div>
+          <div>
+            <h1>Finance RAG Intelligence</h1>
+            <p>Grounded Financial Assistant • Multi-GB Corporate, Market & Fraud Dataset</p>
+          </div>
+        </div>
+        <div class="system-status">
+          <span class="status-dot"></span>
+          <span id="stats-badge">Connected • ChromaDB Vector Store</span>
+        </div>
+      </div>
+
+      <!-- Main Chat Card -->
+      <div class="chat-card">
+        <!-- Quick Starter Prompts -->
+        <div class="topics-bar">
+          <button class="topic-pill" data-prompt="What was the Net Profit, Sales, and Operating Profit Margin for Reliance Industries in Mar 2023?">
+            📊 Reliance Financials Mar 2023
+          </button>
+          <button class="topic-pill" data-prompt="What is the historical price range, all-time high, and latest close price for ticker AAPL?">
+            📈 Apple (AAPL) Stock History
+          </button>
+          <button class="topic-pill" data-prompt="Summarize the credit card fraud transactions, top merchants, categories, and fraud distribution.">
+            💳 Credit Card Fraud Patterns
+          </button>
+          <button class="topic-pill" data-prompt="What is the profile, yearly income, debt, and credit score for Hazel Robinson?">
+            👤 User Profile: Hazel Robinson
+          </button>
+          <button class="topic-pill" data-prompt="What are the latest corporate news announcements and board meeting updates in the dataset?">
+            📰 Corporate News & Announcements
+          </button>
+        </div>
+
+        <!-- Message Flow -->
+        <div id="chat-flow" class="chat-messages">
+          <div class="message-row assistant">
+            <div class="bubble">
+              <strong>Welcome to the Finance RAG Intelligence System!</strong>
+              <p>I am grounded on your ~6–10 GB financial dataset, including:</p>
+              <ul>
+                <li><strong>Indian Equities & Statements:</strong> Reliance, TCS, Infosys, and 4,400+ BSE/NSE companies (Balance Sheets, Cash Flows, P&L, YoY/QoQ Growth).</li>
+                <li><strong>US Stocks & ETFs:</strong> 8,050 securities, historical OHLCV price summaries, all-time highs/lows.</li>
+                <li><strong>Credit Cards & Fraud:</strong> Demographics, credit limits, user cards, fraud transaction logs, and merchant statistics.</li>
+              </ul>
+              <p>Ask any question or click a starter topic above to begin!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Composer -->
+        <div class="composer">
+          <input
+            id="query-input"
+            class="input-field"
+            type="text"
+            placeholder="Ask a question about financial statements, stock prices, fraud data, or user profiles..."
+            autocomplete="off"
+          />
+          <button id="send-button" class="send-btn">
+            <span>Send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const chatFlow = document.getElementById("chat-flow");
+      const input = document.getElementById("query-input");
+      const sendBtn = document.getElementById("send-button");
+      const statsBadge = document.getElementById("stats-badge");
+      const pills = document.querySelectorAll(".topic-pill");
+
+      const API_URL = "http://localhost:8000";
+
+      // Fetch vector store status
+      async function updateStats() {
+        try {
+          const res = await fetch(`${API_URL}/api/stats`);
+          if (res.ok) {
+            const data = await res.json();
+            statsBadge.innerText = `ChromaDB: ${data.total_chunks.toLocaleString()} chunks | Model: ${data.llm_model}`;
+          }
+        } catch (e) {
+          statsBadge.innerText = "Backend Offline";
+          document.querySelector(".status-dot").style.background = "#ef4444";
+        }
+      }
+      updateStats();
+
+      function appendMessage(role, htmlContent, sources = [], latency = null) {
+        const row = document.createElement("div");
+        row.className = `message-row ${role}`;
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML = htmlContent;
+
+        row.appendChild(bubble);
+
+        if (sources && sources.length > 0) {
+          const sourcesBox = document.createElement("div");
+          sourcesBox.className = "sources-container";
+          sourcesBox.innerHTML = `<div class="sources-title">📑 Verified Evidence Sources (${sources.length})</div>`;
+
+          sources.forEach((s, idx) => {
+            const badge = document.createElement("div");
+            badge.className = "source-badge";
+            const comp = s.company_name || s.symbol ? ` [${s.company_name || s.symbol}]` : "";
+            badge.innerHTML = `<strong>${idx + 1}.</strong> ${s.file}${comp} (Page ${s.page || 1})`;
+            sourcesBox.appendChild(badge);
+          });
+          row.appendChild(sourcesBox);
+        }
+
+        if (latency !== null) {
+          const meta = document.createElement("div");
+          meta.className = "meta-latency";
+          meta.innerText = `Retrieved & generated in ${latency}s`;
+          row.appendChild(meta);
+        }
+
+        chatFlow.appendChild(row);
+        chatFlow.scrollTop = chatFlow.scrollHeight;
+        return row;
+      }
+
+      async function handleSend(question) {
+        const q = (question || input.value).trim();
+        if (!q) return;
+
+        appendMessage("user", q);
+        input.value = "";
+        input.focus();
+
+        // Add loading bubble
+        const loadingRow = document.createElement("div");
+        loadingRow.className = "message-row assistant";
+        loadingRow.innerHTML = `
+          <div class="bubble" style="display:flex; align-items:center; gap:10px;">
+            <div class="loading-spinner"></div>
+            <span>Searching 10 GB dataset & generating grounded answer...</span>
+          </div>
+        `;
+        chatFlow.appendChild(loadingRow);
+        chatFlow.scrollTop = chatFlow.scrollHeight;
+
+        try {
+          const response = await fetch(`${API_URL}/api/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: q }),
+          });
+
+          const data = await response.json();
+          loadingRow.remove();
+
+          const renderedMarkdown = marked.parse(data.answer || "No response received.");
+          appendMessage("assistant", renderedMarkdown, data.sources || [], data.latency_seconds);
+          updateStats();
+        } catch (error) {
+          loadingRow.remove();
+          appendMessage(
+            "assistant",
+            `<span style="color:#f87171;">⚠️ Connection Error: Unable to reach FastAPI backend on port 8000. Please make sure the service is running.</span>`
+          );
+        }
+      }
+
+      sendBtn.addEventListener("click", () => handleSend());
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleSend();
+      });
+
+      pills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+          handleSend(pill.dataset.prompt);
+        });
+      });
+    </script>
+  </body>
+</html>
