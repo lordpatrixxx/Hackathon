@@ -207,8 +207,14 @@ def chat(req: ChatRequest):
     )
 
 
+import os
+from fastapi.responses import FileResponse
+
 @app.get("/")
 def root():
+    index_path = os.path.join(os.getcwd(), "frontend", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
     return {
         "service": "Finance RAG Intelligence Backend",
         "status": "operational",
