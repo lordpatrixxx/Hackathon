@@ -212,7 +212,10 @@ from fastapi.responses import FileResponse
 
 @app.get("/")
 def root():
-    index_path = os.path.join(os.getcwd(), "frontend", "index.html")
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    index_path = os.path.join(base_dir, "frontend", "index.html")
+    if not os.path.exists(index_path):
+        index_path = os.path.join(os.getcwd(), "frontend", "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return {
