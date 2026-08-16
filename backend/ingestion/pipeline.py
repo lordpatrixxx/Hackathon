@@ -341,7 +341,7 @@ def _extract_users_and_cards(path: Path) -> List[Dict[str, Any]]:
                     debt = row.get("Total Debt", "")
                     score = row.get("FICO Score", "") or row.get("Credit Score", "")
                     cards = row.get("Num Credit Cards", "")
-                    text = f"User Profile: {person} | Age: {age} (Retirement: {ret_age}) | Gender: {gender} | Location: {city}, {state} | Income: {income} | Debt: {debt} | Credit Score: {score} | Cards Count: {cards}"
+                    text = f"User Profile: {person} | Age: {age} (Retirement: {ret_age}) | Gender: {gender} | Location: {city}, {state} | Yearly Income: {income} | Total Debt: {debt} | FICO Score: {score} | Credit Score: {score} | Cards Count: {cards}"
                     docs.append({
                         "text": text,
                         "source": str(path),
@@ -385,6 +385,57 @@ def _extract_users_and_cards(path: Path) -> List[Dict[str, Any]]:
                     })
     except Exception as exc:
         logger.warning(f"Error parsing users/cards: {exc}")
+    return docs
+
+
+def _extract_terminal_and_customer_profiles(path: Path) -> List[Dict[str, Any]]:
+    docs = []
+    name = path.name
+    try:
+        with path.open("r", encoding="utf-8", errors="ignore") as f:
+            reader = csv.DictReader(f)
+            fields = reader.fieldnames or []
+            if "terminal_id" in fields or "lat_terminal" in fields:
+                for idx, row in enumerate(reader):
+                    tid = row.get("terminal_id", "")
+                    lat = row.get("lat_terminal", "")
+                    lon = row.get("log_terminal", "")
+                    mcc = row.get("mcc", "")
+                    text = f"POS Terminal Profile: Terminal ID {tid} | Merchant Category Code (MCC): {mcc} | Coordinates: ({lat}, {lon})"
+                    docs.append({
+                        "text": text,
+                        "source": str(path),
+                        "page": idx + 1,
+                        "metadata": {
+                            "file_name": name,
+                            "document_type": "terminal_profile",
+                            "terminal_id": tid,
+                            "mcc": mcc,
+                        },
+                        "content_type": "table",
+                        "extraction_method": "terminal_extractor",
+                    })
+            elif "customer_id" in fields or "mean_amount" in fields:
+                for idx, row in enumerate(reader):
+                    cid = row.get("customer_id", "")
+                    mean_amt = row.get("mean_amount", "")
+                    std_amt = row.get("std_amount", "")
+                    tx_day = row.get("mean_nb_tx_per_day", "")
+                    text = f"Customer Profile: Customer ID {cid} | Mean Transaction Amount: ${mean_amt} | Std Amount: ${std_amt} | Transactions Per Day: {tx_day}"
+                    docs.append({
+                        "text": text,
+                        "source": str(path),
+                        "page": idx + 1,
+                        "metadata": {
+                            "file_name": name,
+                            "document_type": "customer_profile",
+                            "customer_id": cid,
+                        },
+                        "content_type": "table",
+                        "extraction_method": "customer_extractor",
+                    })
+    except Exception as exc:
+        logger.warning(f"Error parsing terminal/customer profiles: {exc}")
     return docs
 
 
@@ -631,6 +682,8 @@ def extract_document_text(path: Path) -> List[Dict[str, Any]]:
         return _extract_symbols_valid_meta(path)
     if name in {"sd254_users.csv", "sd254_cards.csv"}:
         return _extract_users_and_cards(path)
+    if name in {"terminal_profiles_table.csv", "customer_profiles_table.csv"}:
+        return _extract_terminal_and_customer_profiles(path)
     if "fraud" in name or name in {"cc_fraud.csv", "user0_credit_card_transactions.csv"}:
         return _extract_fraud_samples(path)
     if name == "stk.json":

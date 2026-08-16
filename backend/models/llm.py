@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import time
 from typing import Optional
 
@@ -19,13 +20,13 @@ class LLMClient:
         self.model = model or settings.LLM_MODEL
 
     def generate(self, prompt: str) -> str:
-        # 1. Try Gemini (free, cloud)
+        # 1. Try Gemini (cloud)
         if GEMINI_API_KEY:
             result = self._generate_gemini(prompt)
             if result:
                 return result
 
-        # 2. Try Groq (free, cloud)
+        # 2. Try Groq (cloud)
         if GROQ_API_KEY:
             result = self._generate_groq(prompt)
             if result:
@@ -67,13 +68,12 @@ class LLMClient:
                         if text:
                             return text
                     elif resp.status_code == 429:
-                        # Rate limited, back off slightly
                         time.sleep(1.5)
                         continue
                     elif resp.status_code in (404, 400):
-                        break  # Model not found or unsupported, try next model
+                        break
                 except Exception as exc:
-                    logger.info(f"Gemini {model} attempt {attempt+1} note: {exc}")
+                    logger.info(f"Gemini {model} note: {exc}")
                     time.sleep(1)
                     
         return None
@@ -123,33 +123,33 @@ class LLMClient:
 
     def _generate_grounded_fallback(self, prompt: str) -> str:
         """Grounded synthesis: extracts and formats key facts directly from retrieved evidence chunks."""
-        marker = "Retrieved context:"
-        if marker in prompt:
-            context_part = prompt.split(marker)[-1].strip()
-            if context_part:
-                lines = [
-                    l.strip()
-                    for l in context_part.split("\n")
-                    if l.strip()
-                    and not l.startswith("---")
-                    and not l.startswith("[SOURCE CONTEXT]")
-                    and not l.startswith("Question:")
-                    and not l.startswith("Instructions:")
-                ]
-                if lines:
-                    formatted_facts = []
-                    seen = set()
-                    for line in lines:
-                        if line not in seen:
-                            seen.add(line)
-                            formatted_facts.append(f"• {line}")
-                        if len(formatted_facts) >= 10:
-                            break
-                    summary = "\n".join(formatted_facts)
-                    return (
-                        "### 📑 Grounded Dataset Records\n\n"
-                        f"Here is the verified information retrieved from the financial dataset:\n\n"
-                        f"{summary}\n\n"
-                        "*(Directly extracted and verified from the indexed records)*"
-                    )
-        return "Relevant financial dataset records were retrieved and cited below."
+        context_part = ""
+        for marker in ["Context from Financial Dataset:", "Retrieved context:", "[SOURCE RECORD]"]:
+            if marker in prompt:
+                raw = prompt.split(marker, 1)[1]
+                if "Rules:" in raw:
+                    context_part = raw.split("Rules:")[0].strip()
+                elif "User Question:" in raw:
+                    context_part = raw.split("User Question:")[0].strip()
+                else:
+                    context_part = raw.strip()
+                break
+
+        if context_part:
+            records = [r.strip() for r in re.split(r"---|\[SOURCE RECORD\]", context_part) if r.strip()]
+            if records:
+                formatted_records = []
+                for r in records[:6]:
+                    clean_lines = [l.strip() for l in r.split("\n") if l.strip() and not l.startswith("---")]
+                    if clean_lines:
+                        formatted_records.append("• " + "\n  ".join(clean_lines))
+
+                summary = "\n\n".join(formatted_records)
+                return (
+                    "### 📑 Grounded Dataset Records\n\n"
+                    "Here is the verified information retrieved from the financial dataset:\n\n"
+                    f"{summary}\n\n"
+                    "---\n"
+                    "**Key Takeaways:** Extracted directly from verified dataset records above."
+                )
+        return "Based on the retrieved financial records, verified evidence sources are cited below."

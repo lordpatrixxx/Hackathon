@@ -131,21 +131,31 @@ class VectorStoreManager:
         clean_text = re.sub(r"[^\w\s]", " ", query_text)
         tokens = [t.strip() for t in clean_text.split() if len(t.strip()) >= 3 and t.strip().lower() not in STOP_WORDS]
         
-        # Check for key multi-word entities (like "Reliance Industries", "Hazel Robinson", "Credit Card")
-        phrases = []
-        if "reliance" in query_text.lower():
-            phrases.append("RELIANCE")
-        if "hazel" in query_text.lower() or "robinson" in query_text.lower():
-            phrases.append("Hazel Robinson")
-        if "aapl" in query_text.lower():
-            phrases.append("AAPL")
-        if "msft" in query_text.lower():
-            phrases.append("MSFT")
+        search_terms = []
+        
+        # Multi-word entity phrases
+        for phrase in ["Hazel Robinson", "Reliance Industries", "Credit Card", "Apple", "Microsoft"]:
+            if phrase.lower() in query_text.lower() or all(w.lower() in query_text.lower() for w in phrase.split()):
+                search_terms.append(phrase)
 
-        search_terms = phrases + [t for t in tokens if len(t) >= 4][:3]
+        # Add individual key tokens, prioritizing alphanumeric IDs (e.g. T001000, 500325) and longer words
+        id_tokens = [t for t in tokens if any(c.isdigit() for c in t) or len(t) >= 5]
+        short_tokens = [t for t in tokens if t not in id_tokens]
+        ordered_tokens = id_tokens + short_tokens
+
+        for t in ordered_tokens:
+            if t.upper().startswith("T00") and len(t) >= 5:
+                search_terms.insert(0, f"Terminal ID {t.upper()}")
+                search_terms.insert(0, f"terminal_id: {t.upper()}")
+            if t.upper().startswith("C00") and len(t) >= 5:
+                search_terms.insert(0, f"Customer ID {t.upper()}")
+                search_terms.insert(0, f"customer_id: {t.upper()}")
+            for variant in [t, t.upper(), t.title(), t.lower()]:
+                if variant not in search_terms:
+                    search_terms.append(variant)
 
         seen = set()
-        for term in search_terms:
+        for term in search_terms[:12]:
             try:
                 res = self.collection.get(
                     where_document={"$contains": term},
@@ -158,8 +168,8 @@ class VectorStoreManager:
                             hits.append({
                                 "id": doc_id,
                                 "text": res["documents"][idx],
-                                "metadata": res["metadatas"][idx],
-                                "distance": 0.08,  # high relevance boost
+                                "metadata": res["metadatas"][idx] if res.get("metadatas") else {},
+                                "distance": 0.05,
                             })
                             if len(hits) >= limit:
                                 return hits
