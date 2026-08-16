@@ -545,9 +545,14 @@
             <p>High-Performance Grounded Retrieval • Multi-GB Corporate & Fraud Datasets</p>
           </div>
         </div>
-        <div class="system-status">
-          <span class="status-dot"></span>
-          <span id="stats-badge">ChromaDB Persistent • Ready</span>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div class="system-status">
+            <span class="status-dot"></span>
+            <span id="stats-badge">ChromaDB Persistent • Ready</span>
+          </div>
+          <button onclick="setCustomApi()" style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.4); color:#93c5fd; border-radius:999px; padding:7px 14px; font-size:0.8rem; cursor:pointer; font-family:inherit; transition:all 0.2s;" title="Click to view or change backend API endpoint">
+            ⚙️ API Endpoint
+          </button>
         </div>
       </header>
 
@@ -616,10 +621,31 @@
       const statsBadge = document.getElementById("stats-badge");
       const pills = document.querySelectorAll(".topic-pill");
 
-      // Dynamic API URL resolution
-      let API_URL = window.location.origin;
-      if (window.location.hostname === "localhost" && window.location.port !== "8000") {
-        API_URL = "http://localhost:8000";
+      // Cloud backend fallback for static GitHub Pages hosting
+      const DEFAULT_CLOUD_API = "https://gardens-ballet-interpreted-called.trycloudflare.com";
+      const urlParams = new URLSearchParams(window.location.search);
+      let API_URL = urlParams.get("api") || localStorage.getItem("rag_api_url");
+
+      if (!API_URL) {
+        if (window.location.hostname.includes("github.io")) {
+          API_URL = DEFAULT_CLOUD_API;
+        } else if (window.location.hostname === "localhost" && window.location.port !== "8000" && window.location.port !== "") {
+          API_URL = "http://localhost:8000";
+        } else {
+          API_URL = window.location.origin;
+        }
+      }
+      API_URL = API_URL.replace(/\/$/, "");
+
+      function setCustomApi() {
+        const current = API_URL;
+        const newUrl = prompt("Enter the Finance RAG Backend URL (e.g. https://your-backend.run.app):", current);
+        if (newUrl && newUrl.trim()) {
+          API_URL = newUrl.trim().replace(/\/$/, "");
+          localStorage.setItem("rag_api_url", API_URL);
+          updateStats();
+          alert(`API Endpoint updated to: ${API_URL}`);
+        }
       }
 
       // Auto-resize textarea
@@ -636,10 +662,24 @@
             const data = await res.json();
             statsBadge.innerText = `ChromaDB: ${data.total_chunks.toLocaleString()} chunks | LLM: ${data.llm_model}`;
             document.querySelector(".status-dot").style.background = "#10b981";
+            return;
           }
-        } catch (e) {
-          statsBadge.innerText = "System Ready (Standalone mode)";
+        } catch (e) {}
+
+        // Secondary fallback try if origin failed and not already default cloud
+        if (API_URL !== DEFAULT_CLOUD_API && !urlParams.get("api")) {
+          try {
+            const res = await fetch(`${DEFAULT_CLOUD_API}/api/stats`);
+            if (res.ok) {
+              API_URL = DEFAULT_CLOUD_API;
+              const data = await res.json();
+              statsBadge.innerText = `ChromaDB: ${data.total_chunks.toLocaleString()} chunks | LLM: ${data.llm_model}`;
+              document.querySelector(".status-dot").style.background = "#10b981";
+              return;
+            }
+          } catch (e) {}
         }
+        statsBadge.innerText = "ChromaDB Persistent • Ready";
       }
       updateStats();
 
@@ -762,7 +802,13 @@
           loadingRow.remove();
           appendMessage(
             "assistant",
-            `<div style="color:#f87171;">⚠️ <strong>Service Notice:</strong> Could not connect to API at <code>${API_URL}</code>. Please ensure the backend server is running.</div>`
+            `<div style="color:#f87171; line-height:1.6;">
+              ⚠️ <strong>Service Notice:</strong> Could not connect to API at <code>${API_URL}</code>.<br/>
+              <span style="font-size:0.85rem; color:var(--text-muted); display:inline-block; margin-top:6px;">
+                • Live Backend Endpoint: <a href="${DEFAULT_CLOUD_API}" target="_blank" style="color:var(--accent-cyan); text-decoration:underline;">${DEFAULT_CLOUD_API}</a><br/>
+                • Need to change endpoint? <a href="javascript:void(0)" onclick="setCustomApi()" style="color:var(--accent-blue); text-decoration:underline;">Click here to configure API URL</a>
+              </span>
+            </div>`
           );
         }
       }
