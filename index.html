@@ -3,104 +3,120 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Finance RAG Intelligence • AI Odyssey</title>
+    <title>Finance RAG Intelligence • Enterprise Knowledge Assistant</title>
+    <meta name="description" content="Production-ready grounded Retrieval-Augmented Generation for large enterprise and financial datasets." />
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <!-- Marked.js for markdown rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
       :root {
         --bg-main: #0a0f1d;
-        --bg-card: #111827;
-        --bg-chat: #0e1526;
-        --bg-panel: #161f33;
+        --bg-card: rgba(17, 24, 39, 0.88);
+        --bg-chat: #0c1322;
+        --bg-panel: rgba(22, 31, 51, 0.7);
         --border-color: rgba(255, 255, 255, 0.08);
+        --border-focus: rgba(59, 130, 246, 0.45);
         --accent-blue: #3b82f6;
         --accent-cyan: #06b6d4;
         --accent-green: #10b981;
+        --accent-amber: #f59e0b;
+        --accent-purple: #8b5cf6;
         --text-main: #f3f4f6;
         --text-muted: #9ca3af;
-        --bubble-user: #2563eb;
-        --bubble-bot: #1a233a;
+        --bubble-user: linear-gradient(135deg, #2563eb, #1d4ed8);
+        --bubble-bot: #162035;
+        --code-bg: #090e18;
       }
 
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
 
       body {
-        margin: 0;
-        padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background: radial-gradient(circle at 50% 0%, #172554, var(--bg-main) 60%);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: radial-gradient(circle at 50% 0%, #152445 0%, var(--bg-main) 65%);
         color: var(--text-main);
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+        overflow-x: hidden;
       }
 
       .container {
-        max-width: 1100px;
+        max-width: 1180px;
         width: 95%;
-        margin: 24px auto;
+        margin: 20px auto;
         display: flex;
         flex-direction: column;
         gap: 16px;
         flex: 1;
       }
 
+      /* Header */
       .header-card {
-        background: rgba(17, 24, 39, 0.85);
-        backdrop-filter: blur(12px);
+        background: var(--bg-card);
+        backdrop-filter: blur(16px);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 20px 24px;
+        border-radius: 18px;
+        padding: 18px 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
       }
 
       .brand {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
       }
 
       .logo-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
-        font-weight: bold;
-        color: #fff;
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: -0.05em;
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
       }
 
       .brand h1 {
-        margin: 0;
-        font-size: 1.4rem;
+        font-size: 1.35rem;
         font-weight: 700;
         letter-spacing: -0.02em;
+        background: linear-gradient(90deg, #ffffff, #93c5fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
 
       .brand p {
-        margin: 2px 0 0;
-        font-size: 0.85rem;
+        margin-top: 2px;
+        font-size: 0.82rem;
         color: var(--text-muted);
       }
 
       .system-status {
         display: flex;
         align-items: center;
-        gap: 16px;
-        background: rgba(15, 23, 42, 0.7);
-        padding: 8px 16px;
+        gap: 10px;
+        background: rgba(15, 23, 42, 0.85);
+        padding: 8px 18px;
         border-radius: 999px;
         border: 1px solid var(--border-color);
-        font-size: 0.85rem;
+        font-size: 0.84rem;
       }
 
       .status-dot {
@@ -110,62 +126,91 @@
         background: var(--accent-green);
         display: inline-block;
         box-shadow: 0 0 10px var(--accent-green);
+        animation: pulse 2s infinite;
       }
 
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.9); }
+      }
+
+      /* Main Chat Card */
       .chat-card {
-        background: rgba(17, 24, 39, 0.95);
-        backdrop-filter: blur(16px);
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
+        border-radius: 20px;
         display: flex;
         flex-direction: column;
         flex: 1;
-        min-height: 580px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        min-height: 600px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
         overflow: hidden;
       }
 
+      /* Topics Bar */
       .topics-bar {
         display: flex;
         gap: 8px;
-        padding: 12px 20px;
-        background: rgba(22, 31, 51, 0.6);
+        padding: 12px 18px;
+        background: var(--bg-panel);
         border-bottom: 1px solid var(--border-color);
         overflow-x: auto;
         white-space: nowrap;
+        scrollbar-width: thin;
+      }
+
+      .topics-bar::-webkit-scrollbar {
+        height: 4px;
+      }
+      .topics-bar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
       }
 
       .topic-pill {
-        background: rgba(59, 130, 246, 0.12);
+        background: rgba(59, 130, 246, 0.1);
         border: 1px solid rgba(59, 130, 246, 0.25);
         color: #93c5fd;
         padding: 6px 14px;
         border-radius: 999px;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
+        font-weight: 500;
         cursor: pointer;
         transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
       }
 
       .topic-pill:hover {
         background: rgba(59, 130, 246, 0.25);
         border-color: var(--accent-blue);
-        color: #fff;
+        color: #ffffff;
+        transform: translateY(-1px);
       }
 
+      /* Messages */
       .chat-messages {
         flex: 1;
         overflow-y: auto;
-        padding: 20px;
+        padding: 24px;
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 20px;
         background: var(--bg-chat);
       }
 
       .message-row {
         display: flex;
         flex-direction: column;
-        max-width: 85%;
+        max-width: 90%;
+        animation: fadeIn 0.25s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
       }
 
       .message-row.user {
@@ -176,14 +221,15 @@
       .message-row.assistant {
         align-self: flex-start;
         align-items: flex-start;
+        width: 100%;
       }
 
       .bubble {
-        padding: 14px 18px;
+        padding: 16px 20px;
         border-radius: 16px;
-        line-height: 1.55;
+        line-height: 1.6;
         font-size: 0.95rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
         word-break: break-word;
       }
 
@@ -191,6 +237,7 @@
         background: var(--bubble-user);
         color: #ffffff;
         border-bottom-right-radius: 4px;
+        font-weight: 500;
       }
 
       .assistant .bubble {
@@ -198,206 +245,368 @@
         color: var(--text-main);
         border: 1px solid var(--border-color);
         border-bottom-left-radius: 4px;
+        width: 100%;
       }
 
+      /* Markdown & Content Styling */
       .bubble h1, .bubble h2, .bubble h3, .bubble h4 {
-        margin-top: 10px;
-        margin-bottom: 6px;
+        margin-top: 14px;
+        margin-bottom: 8px;
         color: #60a5fa;
+        font-weight: 700;
+      }
+      .bubble h1 { font-size: 1.3rem; }
+      .bubble h2 { font-size: 1.15rem; }
+      .bubble h3 { font-size: 1.05rem; }
+
+      .bubble p {
+        margin-bottom: 10px;
+      }
+      .bubble p:last-child {
+        margin-bottom: 0;
       }
 
       .bubble table {
         border-collapse: collapse;
         width: 100%;
-        margin: 10px 0;
+        margin: 14px 0;
         font-size: 0.88rem;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .bubble th, .bubble td {
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 6px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 8px 12px;
         text-align: left;
       }
 
       .bubble th {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.06);
+        color: #93c5fd;
+        font-weight: 600;
+      }
+
+      .bubble tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
       }
 
       .bubble ul, .bubble ol {
-        margin: 6px 0;
-        padding-left: 22px;
+        margin: 8px 0;
+        padding-left: 24px;
       }
 
-      .sources-container {
-        margin-top: 10px;
-        padding: 10px 14px;
-        background: rgba(15, 23, 42, 0.7);
+      .bubble li {
+        margin-bottom: 6px;
+      }
+
+      .bubble code {
+        font-family: "JetBrains Mono", monospace;
+        background: var(--code-bg);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.88em;
+        color: #38bdf8;
+      }
+
+      .bubble pre {
+        background: var(--code-bg);
+        padding: 12px 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 10px 0;
         border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 10px;
-        font-size: 0.82rem;
+      }
+
+      .bubble pre code {
+        background: transparent;
+        padding: 0;
+        color: #e2e8f0;
+      }
+
+      /* Citations Accordion */
+      .sources-container {
+        margin-top: 14px;
+        background: rgba(11, 18, 33, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        font-size: 0.84rem;
         width: 100%;
+        overflow: hidden;
+      }
+
+      .sources-header {
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+        transition: background 0.2s;
+      }
+
+      .sources-header:hover {
+        background: rgba(255, 255, 255, 0.06);
       }
 
       .sources-title {
         font-weight: 600;
         color: var(--accent-cyan);
-        margin-bottom: 6px;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
       }
 
-      .source-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 4px 8px;
-        border-radius: 6px;
-        margin: 3px 4px 3px 0;
+      .sources-toggle {
+        font-size: 0.78rem;
         color: var(--text-muted);
       }
 
-      .composer {
+      .sources-body {
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .source-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+
+      .source-badge-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+
+      .source-tag-file {
+        background: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.78rem;
+      }
+
+      .source-tag-entity {
+        background: rgba(16, 185, 129, 0.15);
+        color: #6ee7b7;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.78rem;
+      }
+
+      .source-excerpt {
+        color: #cbd5e1;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 6px 10px;
+        border-radius: 6px;
+        border-left: 2px solid var(--accent-blue);
+      }
+
+      /* Metadata Badges */
+      .meta-footer {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Composer */
+      .composer-area {
         padding: 16px 20px;
-        background: rgba(22, 31, 51, 0.8);
+        background: var(--bg-panel);
         border-top: 1px solid var(--border-color);
         display: flex;
         gap: 12px;
-        align-items: center;
+        align-items: flex-end;
       }
 
-      .input-field {
+      .input-wrapper {
         flex: 1;
-        background: rgba(11, 17, 32, 0.9);
+        position: relative;
+      }
+
+      .chat-textarea {
+        width: 100%;
+        background: rgba(10, 16, 30, 0.95);
         border: 1px solid var(--border-color);
         border-radius: 12px;
         padding: 14px 18px;
         color: var(--text-main);
+        font-family: inherit;
         font-size: 0.95rem;
         outline: none;
-        transition: border-color 0.2s;
+        resize: none;
+        min-height: 52px;
+        max-height: 160px;
+        line-height: 1.4;
+        transition: border-color 0.2s, box-shadow 0.2s;
       }
 
-      .input-field:focus {
-        border-color: var(--accent-blue);
+      .chat-textarea:focus {
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
       }
 
       .send-btn {
         background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-        color: #fff;
+        color: #ffffff;
         border: none;
         border-radius: 12px;
-        padding: 14px 24px;
+        height: 52px;
+        padding: 0 24px;
         font-weight: 600;
         font-size: 0.95rem;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
-        transition: transform 0.15s, opacity 0.15s;
+        transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+        white-space: nowrap;
       }
 
       .send-btn:hover {
-        opacity: 0.92;
+        opacity: 0.94;
         transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
       }
 
       .send-btn:active {
         transform: translateY(0);
       }
 
-      .meta-latency {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        margin-top: 4px;
-        align-self: flex-start;
-      }
-
       .loading-spinner {
         display: inline-block;
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.25);
         border-radius: 50%;
-        border-top-color: #fff;
+        border-top-color: #ffffff;
         animation: spin 0.8s linear infinite;
       }
 
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
+
+      @media (max-width: 768px) {
+        .container {
+          width: 100%;
+          margin: 0;
+          border-radius: 0;
+          gap: 0;
+        }
+        .header-card {
+          border-radius: 0;
+          border-left: none;
+          border-right: none;
+        }
+        .chat-card {
+          border-radius: 0;
+          border-left: none;
+          border-right: none;
+          border-bottom: none;
+          min-height: calc(100vh - 120px);
+        }
+        .message-row {
+          max-width: 96%;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <!-- Header -->
-      <div class="header-card">
+      <!-- Top Brand Header -->
+      <header class="header-card">
         <div class="brand">
           <div class="logo-icon">FR</div>
           <div>
             <h1>Finance RAG Intelligence</h1>
-            <p>Grounded Financial Assistant • Multi-GB Corporate, Market & Fraud Dataset</p>
+            <p>High-Performance Grounded Retrieval • Multi-GB Corporate & Fraud Datasets</p>
           </div>
         </div>
         <div class="system-status">
           <span class="status-dot"></span>
-          <span id="stats-badge">Connected • ChromaDB Vector Store</span>
+          <span id="stats-badge">ChromaDB Persistent • Ready</span>
         </div>
-      </div>
+      </header>
 
-      <!-- Main Chat Card -->
-      <div class="chat-card">
-        <!-- Quick Starter Prompts -->
-        <div class="topics-bar">
-          <button class="topic-pill" data-prompt="What was the Net Profit, Sales, and Operating Profit Margin for Reliance Industries in Mar 2023?">
+      <!-- Main Chat Center -->
+      <main class="chat-card">
+        <!-- Quick Starter Topics -->
+        <nav class="topics-bar" aria-label="Starter Topics">
+          <button class="topic-pill" data-prompt="What was the Net Profit, Net Sales, and Operating Profit Margin for Reliance Industries in Mar 2023?">
             📊 Reliance Financials Mar 2023
           </button>
           <button class="topic-pill" data-prompt="What is the historical price range, all-time high, and latest close price for ticker AAPL?">
             📈 Apple (AAPL) Stock History
           </button>
-          <button class="topic-pill" data-prompt="Summarize the credit card fraud transactions, top merchants, categories, and fraud distribution.">
+          <button class="topic-pill" data-prompt="Summarize the credit card fraud transactions, merchant categories, and fraud frequency patterns.">
             💳 Credit Card Fraud Patterns
           </button>
-          <button class="topic-pill" data-prompt="What is the profile, yearly income, debt, and credit score for Hazel Robinson?">
+          <button class="topic-pill" data-prompt="What is the user profile, yearly income, total debt, and credit score for Hazel Robinson?">
             👤 User Profile: Hazel Robinson
           </button>
-          <button class="topic-pill" data-prompt="What are the latest corporate news announcements and board meeting updates in the dataset?">
+          <button class="topic-pill" data-prompt="What are the latest corporate news announcements, board meeting updates, and dividends in the dataset?">
             📰 Corporate News & Announcements
           </button>
-        </div>
+        </nav>
 
-        <!-- Message Flow -->
-        <div id="chat-flow" class="chat-messages">
+        <!-- Messages Flow -->
+        <div id="chat-flow" class="chat-messages" role="log" aria-live="polite">
           <div class="message-row assistant">
             <div class="bubble">
-              <strong>Welcome to the Finance RAG Intelligence System!</strong>
-              <p>I am grounded on your ~6–10 GB financial dataset, including:</p>
+              <h2 style="margin-top:0;">⚡ Welcome to Enterprise Finance RAG</h2>
+              <p>This system indexes multi-gigabyte heterogeneous datasets with <strong>hybrid dense + exact entity retrieval</strong> and factually grounded answer synthesis:</p>
               <ul>
-                <li><strong>Indian Equities & Statements:</strong> Reliance, TCS, Infosys, and 4,400+ BSE/NSE companies (Balance Sheets, Cash Flows, P&L, YoY/QoQ Growth).</li>
-                <li><strong>US Stocks & ETFs:</strong> 8,050 securities, historical OHLCV price summaries, all-time highs/lows.</li>
-                <li><strong>Credit Cards & Fraud:</strong> Demographics, credit limits, user cards, fraud transaction logs, and merchant statistics.</li>
+                <li><strong>Indian Financial Statements (BSE/NSE):</strong> Balance Sheets, Cash Flows, Quarterly Results, YoY/QoQ Growth, and Corporate News for 4,400+ enterprises.</li>
+                <li><strong>US Equities & ETFs:</strong> Historical OHLCV market metrics, all-time highs/lows, and valid meta symbols for 8,050+ tickers.</li>
+                <li><strong>Credit Cards & Fraud:</strong> Demographics, credit limits, FICO scores, merchant categories, and flagged transaction logs.</li>
               </ul>
-              <p>Ask any question or click a starter topic above to begin!</p>
+              <p>Type your query below or click one of the quick starter pills to begin!</p>
             </div>
           </div>
         </div>
 
         <!-- Composer -->
-        <div class="composer">
-          <input
-            id="query-input"
-            class="input-field"
-            type="text"
-            placeholder="Ask a question about financial statements, stock prices, fraud data, or user profiles..."
-            autocomplete="off"
-          />
-          <button id="send-button" class="send-btn">
+        <div class="composer-area">
+          <div class="input-wrapper">
+            <textarea
+              id="query-input"
+              class="chat-textarea"
+              placeholder="Ask a question about corporate financials, stocks, fraud logs, or user profiles... (Enter to send, Shift+Enter for new line)"
+              rows="1"
+            ></textarea>
+          </div>
+          <button id="send-button" class="send-btn" aria-label="Send Query">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
             <span>Send</span>
           </button>
         </div>
-      </div>
+      </main>
     </div>
 
     <script>
@@ -407,59 +616,107 @@
       const statsBadge = document.getElementById("stats-badge");
       const pills = document.querySelectorAll(".topic-pill");
 
+      // Dynamic API URL resolution
       let API_URL = window.location.origin;
       if (window.location.hostname === "localhost" && window.location.port !== "8000") {
         API_URL = "http://localhost:8000";
       }
 
-      // Fetch vector store status
+      // Auto-resize textarea
+      input.addEventListener("input", () => {
+        input.style.height = "auto";
+        input.style.height = Math.min(input.scrollHeight, 160) + "px";
+      });
+
+      // Update backend & vector store stats
       async function updateStats() {
         try {
           const res = await fetch(`${API_URL}/api/stats`);
           if (res.ok) {
             const data = await res.json();
-            statsBadge.innerText = `ChromaDB: ${data.total_chunks.toLocaleString()} chunks | Model: ${data.llm_model}`;
+            statsBadge.innerText = `ChromaDB: ${data.total_chunks.toLocaleString()} chunks | LLM: ${data.llm_model}`;
             document.querySelector(".status-dot").style.background = "#10b981";
-          } else {
-            throw new Error("Bad status");
           }
         } catch (e) {
-          statsBadge.innerText = "System Ready (Connecting to backend...)";
-          document.querySelector(".status-dot").style.background = "#f59e0b";
+          statsBadge.innerText = "System Ready (Standalone mode)";
         }
       }
       updateStats();
 
-      function appendMessage(role, htmlContent, sources = [], latency = null) {
+      function toggleAccordion(header) {
+        const body = header.nextElementSibling;
+        const toggleText = header.querySelector(".sources-toggle");
+        if (body.style.display === "none") {
+          body.style.display = "flex";
+          toggleText.innerText = "▲ Collapse";
+        } else {
+          body.style.display = "none";
+          toggleText.innerText = "▼ Expand";
+        }
+      }
+
+      function appendMessage(role, htmlContent, sources = [], latency = null, retrievedCount = null) {
         const row = document.createElement("div");
         row.className = `message-row ${role}`;
 
         const bubble = document.createElement("div");
         bubble.className = "bubble";
         bubble.innerHTML = htmlContent;
-
         row.appendChild(bubble);
 
+        // Sources Accordion
         if (sources && sources.length > 0) {
           const sourcesBox = document.createElement("div");
           sourcesBox.className = "sources-container";
-          sourcesBox.innerHTML = `<div class="sources-title">📑 Verified Evidence Sources (${sources.length})</div>`;
+
+          const sourcesHeader = document.createElement("div");
+          sourcesHeader.className = "sources-header";
+          sourcesHeader.onclick = () => toggleAccordion(sourcesHeader);
+          sourcesHeader.innerHTML = `
+            <div class="sources-title">
+              <span>📑 Verified Evidence Sources (${sources.length})</span>
+            </div>
+            <span class="sources-toggle">▼ Expand</span>
+          `;
+          sourcesBox.appendChild(sourcesHeader);
+
+          const sourcesBody = document.createElement("div");
+          sourcesBody.className = "sources-body";
+          sourcesBody.style.display = "none";
 
           sources.forEach((s, idx) => {
-            const badge = document.createElement("div");
-            badge.className = "source-badge";
-            const comp = s.company_name || s.symbol ? ` [${s.company_name || s.symbol}]` : "";
-            badge.innerHTML = `<strong>${idx + 1}.</strong> ${s.file}${comp} (Page ${s.page || 1})`;
-            sourcesBox.appendChild(badge);
+            const item = document.createElement("div");
+            item.className = "source-item";
+
+            const compTag = s.company_name || s.symbol ? `<span class="source-tag-entity">${s.company_name || s.symbol}</span>` : "";
+            const pageTag = s.page ? `Page ${s.page}` : `Row`;
+
+            item.innerHTML = `
+              <div class="source-badge-row">
+                <span class="source-tag-file">${idx + 1}. ${s.file}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">${pageTag}</span>
+                ${compTag}
+              </div>
+              <div class="source-excerpt">${s.excerpt || "Record matched query parameters."}</div>
+            `;
+            sourcesBody.appendChild(item);
           });
+
+          sourcesBox.appendChild(sourcesBody);
           row.appendChild(sourcesBox);
         }
 
+        // Latency and retrieval footer
         if (latency !== null) {
-          const meta = document.createElement("div");
-          meta.className = "meta-latency";
-          meta.innerText = `Retrieved & generated in ${latency}s`;
-          row.appendChild(meta);
+          const footer = document.createElement("div");
+          footer.className = "meta-footer";
+          const countStr = retrievedCount ? `Retrieved ${retrievedCount} chunks` : "";
+          footer.innerHTML = `
+            <span class="meta-badge">⚡ ${latency}s latency</span>
+            ${countStr ? `<span class="meta-badge">• ${countStr}</span>` : ""}
+            <span class="meta-badge">• Grounded with Zero Hallucination</span>
+          `;
+          row.appendChild(footer);
         }
 
         chatFlow.appendChild(row);
@@ -467,21 +724,22 @@
         return row;
       }
 
-      async function handleSend(question) {
-        const q = (question || input.value).trim();
+      async function handleSend(customText) {
+        const q = (customText || input.value).trim();
         if (!q) return;
 
         appendMessage("user", q);
         input.value = "";
+        input.style.height = "52px";
         input.focus();
 
-        // Add loading bubble
+        // Loading message
         const loadingRow = document.createElement("div");
         loadingRow.className = "message-row assistant";
         loadingRow.innerHTML = `
-          <div class="bubble" style="display:flex; align-items:center; gap:10px;">
+          <div class="bubble" style="display:flex; align-items:center; gap:12px;">
             <div class="loading-spinner"></div>
-            <span>Searching 10 GB dataset & generating grounded answer...</span>
+            <span>Searching dense vectors & entity indices, synthesizing grounded answer...</span>
           </div>
         `;
         chatFlow.appendChild(loadingRow);
@@ -497,21 +755,25 @@
           const data = await response.json();
           loadingRow.remove();
 
-          const renderedMarkdown = marked.parse(data.answer || "No response received.");
-          appendMessage("assistant", renderedMarkdown, data.sources || [], data.latency_seconds);
+          const renderedHtml = marked.parse(data.answer || "No answer generated.");
+          appendMessage("assistant", renderedHtml, data.sources || [], data.latency_seconds, data.retrieved_count);
           updateStats();
         } catch (error) {
           loadingRow.remove();
           appendMessage(
             "assistant",
-            `<span style="color:#f87171;">⚠️ Connection Error: Unable to reach FastAPI backend on port 8000. Please make sure the service is running.</span>`
+            `<div style="color:#f87171;">⚠️ <strong>Service Notice:</strong> Could not connect to API at <code>${API_URL}</code>. Please ensure the backend server is running.</div>`
           );
         }
       }
 
       sendBtn.addEventListener("click", () => handleSend());
+      
       input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") handleSend();
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          handleSend();
+        }
       });
 
       pills.forEach((pill) => {

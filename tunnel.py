@@ -16,7 +16,7 @@ def start_tunnel():
         "-o", "StrictHostKeyChecking=no",
         "-o", "ServerAliveInterval=30",
         "-o", "ServerAliveCountMax=3",
-        "-R", "80:localhost:8000",
+        "-R", "80:127.0.0.1:8000",
         "nokey@localhost.run",
     ]
     

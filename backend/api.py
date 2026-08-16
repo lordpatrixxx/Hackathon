@@ -1,9 +1,11 @@
+import os
 import time
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field, model_validator
 
 from backend.config import ensure_paths, settings
 from backend.ingest import ingest_documents
@@ -20,9 +22,15 @@ app = FastAPI(
     version="1.0.0",
 )
 
+allowed_origins_raw = getattr(settings, "ALLOWED_ORIGINS", "*")
+if allowed_origins_raw == "*" or not allowed_origins_raw:
+    origins = ["*"]
+else:
+    origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,28 +41,21 @@ embedding_model = EmbeddingModel()
 llm_client = LLMClient()
 
 
-def check_and_ensure_index() -> bool:
-    count = vector_store.count()
-    if count > 0:
-        return True
-    try:
-        target_dir = settings.DATA_DIR
-        if not os.path.exists(target_dir) or not os.listdir(target_dir):
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            seed_dir = os.path.join(base_dir, "data", "seed")
-            if os.path.exists(seed_dir) and os.listdir(seed_dir):
-                target_dir = seed_dir
-        ingested = ingest_documents(data_dir=target_dir)
-        return ingested > 0
-    except Exception as exc:
-        print(f"Auto-ingestion error: {exc}")
-        return False
-
-
 class ChatRequest(BaseModel):
-    message: str = Field(..., min_length=1)
+    message: Optional[str] = None
+    query: Optional[str] = None
     conversation_id: Optional[str] = None
     top_k: Optional[int] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_message_or_query(cls, values: Any) -> Any:
+        if isinstance(values, dict):
+            msg = values.get("message") or values.get("query")
+            if not msg or not str(msg).strip():
+                raise ValueError("A non-empty 'message' or 'query' field is required.")
+            values["message"] = str(msg).strip()
+        return values
 
 
 class SourceCitation(BaseModel):
@@ -76,6 +77,7 @@ class ChatResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     vector_store: bool
+    index_ready: bool
     indexed_chunks: int
     embedding_model: bool
     llm: bool
@@ -85,11 +87,18 @@ class HealthResponse(BaseModel):
 def health():
     chunks_count = vector_store.count()
     vector_ok = chunks_count >= 0
-    has_llm = bool(os.getenv("GEMINI_API_KEY") or os.getenv("GROQ_API_KEY"))
+    index_ready = chunks_count > 0
+    has_llm = bool(
+        os.getenv("GEMINI_API_KEY")
+        or os.getenv("GROQ_API_KEY")
+        or os.getenv("OPENAI_API_KEY")
+        or settings.LLM_PROVIDER == "ollama"
+    )
 
     return HealthResponse(
-        status="ok" if vector_ok else "degraded",
+        status="ok" if (vector_ok and index_ready) else "degraded",
         vector_store=vector_ok,
+        index_ready=index_ready,
         indexed_chunks=chunks_count,
         embedding_model=True,
         llm=has_llm,
@@ -103,6 +112,7 @@ def stats():
         "total_chunks": count,
         "collection_name": settings.COLLECTION_NAME,
         "embedding_model": settings.EMBEDDING_MODEL,
+        "llm_provider": settings.LLM_PROVIDER,
         "llm_model": settings.LLM_MODEL,
         "chunk_size": settings.CHUNK_SIZE,
         "chunk_overlap": settings.CHUNK_OVERLAP,
@@ -111,64 +121,63 @@ def stats():
 
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
-    query = req.message.strip()
-    if not query:
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    query_text = (req.message or req.query or "").strip()
+    if not query_text:
+        raise HTTPException(status_code=400, detail="Message or query cannot be empty")
 
     t_start = time.time()
-    
-    # Ensure vector store is available
+
+    # Verify vector store is ready
     if vector_store.count() == 0:
-        if not check_and_ensure_index():
-            return ChatResponse(
-                answer="No documents are currently indexed. Please run ingestion via `python backend/ingest.py` first.",
-                sources=[],
-                latency_seconds=time.time() - t_start,
-                retrieved_count=0,
-            )
+        return ChatResponse(
+            answer="No documents are currently indexed in the vector store. Please run offline ingestion via `python backend/ingest.py` before querying.",
+            sources=[],
+            latency_seconds=round(time.time() - t_start, 2),
+            retrieved_count=0,
+        )
 
     # 1. Embed query
     try:
-        query_embedding = embedding_model.embed_query(query)
+        query_embedding = embedding_model.embed_query(query_text)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Embedding query failed: {exc}")
 
-    # 2. Hybrid search (vector similarity + exact entity/term boost)
+    # 2. Hybrid search (dense vector similarity + exact entity/term boost)
     top_k = req.top_k or settings.RETRIEVAL_TOP_K
     try:
         hits = vector_store.query(
             query_embedding=query_embedding,
             top_k=top_k,
-            query_text=query,
+            query_text=query_text,
         )
     except Exception as exc:
         return ChatResponse(
             answer=f"Vector retrieval error: {exc}",
             sources=[],
-            latency_seconds=time.time() - t_start,
+            latency_seconds=round(time.time() - t_start, 2),
             retrieved_count=0,
         )
 
     if not hits:
         return ChatResponse(
-            answer="No relevant evidence could be retrieved from the finance dataset for your question.",
+            answer="The requested information was not found in the provided dataset.",
             sources=[],
-            latency_seconds=time.time() - t_start,
+            latency_seconds=round(time.time() - t_start, 2),
             retrieved_count=0,
         )
 
     # 3. Build grounded prompt and generate answer
     context_chunks = [hit["text"] for hit in hits]
-    prompt = build_grounded_prompt(query, context_chunks)
-    
+    prompt = build_grounded_prompt(query_text, context_chunks)
+
     try:
         answer = llm_client.generate(prompt)
     except Exception as exc:
         answer = f"Language model error: {exc}"
 
     # 4. Extract structured source citations
-    sources = []
-    seen = set()
+    sources: List[SourceCitation] = []
+    seen: set = set()
     for hit in hits:
         meta = hit.get("metadata", {})
         fname = meta.get("file_name", "unknown")
@@ -176,12 +185,12 @@ def chat(req: ChatRequest):
         page = meta.get("page", 1)
         company = meta.get("company_name")
         symbol = meta.get("symbol")
-        
+
         sig = f"{fname}:{page}:{company}:{symbol}"
         if sig not in seen:
             seen.add(sig)
             raw_text = hit.get("text", "")
-            excerpt = raw_text[:200] + "..." if len(raw_text) > 200 else raw_text
+            excerpt = raw_text[:220] + "..." if len(raw_text) > 220 else raw_text
             sources.append(
                 SourceCitation(
                     file=fname,
@@ -202,17 +211,18 @@ def chat(req: ChatRequest):
     )
 
 
-import os
-from fastapi.responses import FileResponse
-
 @app.get("/")
 def root():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     index_path = os.path.join(base_dir, "frontend", "index.html")
     if not os.path.exists(index_path):
         index_path = os.path.join(os.getcwd(), "frontend", "index.html")
+    if not os.path.exists(index_path):
+        index_path = os.path.join(os.getcwd(), "index.html")
+
     if os.path.exists(index_path):
         return FileResponse(index_path)
+
     return {
         "service": "Finance RAG Intelligence Backend",
         "status": "operational",

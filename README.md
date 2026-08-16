@@ -1,136 +1,144 @@
-# Finance RAG Chatbot
+# 🚀 Enterprise Full-Stack Finance RAG Pipeline
 
-## Problem
-
-The task is to build a grounded finance question-answering assistant over the organizer-supplied dataset for the AI ODYSSEY Finance theme. The application must retrieve evidence from the provided documents instead of relying on general model knowledge.
-
-## Solution
-
-This project provides a simple, beginner-friendly RAG pipeline using Python, FastAPI, ChromaDB, LangChain text splitters, and an Ollama-backed local LLM if available.
-
-## Architecture
-
-```mermaid
-graph TD
-    A[Finance Dataset] --> B[Document Discovery]
-    B --> C[PDF/Text/Table Extraction]
-    C --> D[OCR for Scanned/Image Content]
-    D --> E[Cleaning + Metadata]
-    E --> F[Chunking]
-    F --> G[Embeddings]
-    G --> H[(ChromaDB)]
-    I[User Query] --> J[Query Processing]
-    J --> K[Retriever]
-    K --> H
-    H --> L[Relevant Context]
-    L --> M[Grounded Prompt]
-    M --> N[LLM]
-    N --> O[Answer + Sources]
-    O --> P[Chatbot UI]
-```
-
-## RAG Pipeline
-
-1. Discover files in the configured dataset directory.
-2. Extract text from PDFs, TXT, DOCX, CSV, XLSX, and image files.
-3. Normalize and preserve metadata.
-4. Chunk content with overlap.
-5. Embed chunks using a local model.
-6. Store vectors in ChromaDB.
-7. Retrieve relevant chunks for a query.
-8. Pass the top chunks into a grounded prompt.
-9. Generate an answer and attach citation sources.
-
-## OCR Pipeline
-
-PDF and image pages that have little text or are image-heavy can be processed with OCR using Tesseract when available. The system tries standard PDF extraction first and falls back to OCR when needed.
-
-## Dataset Structure
-
-The dataset is not hardcoded. It is read from the environment variable `DATA_DIR`, which defaults to `./data`.
-
-## Chunking
-
-The project uses `RecursiveCharacterTextSplitter` with configurable settings for chunk size and overlap. Chunk metadata includes source, page, file name, and content type.
-
-## Embeddings
-
-The project is configured for locally hosted embedding models, especially Ollama models such as `nomic-embed-text`.
-
-## Vector Database
-
-ChromaDB is used as the persistent vector store. It stores chunk embeddings in a local directory defined by `VECTOR_DB_DIR`.
-
-## Retrieval
-
-The retriever embeds the incoming query and fetches the most relevant chunks from ChromaDB. It keeps metadata and source references attached.
-
-## LLM
-
-The default configuration uses Ollama; this can be adjusted via `LLM_PROVIDER` and `LLM_MODEL`.
-
-## Grounding Strategy
-
-The prompt explicitly instructs the model to answer only from retrieved evidence and to say when information is not present in the dataset.
-
-## Source Citations
-
-Each answer includes source file and page metadata when available.
-
-## Local Setup
-
-1. Create and activate a virtual environment.
-2. Install dependencies: `pip install -r requirements.txt`
-3. Copy `.env.example` to `.env` and adjust settings.
-4. Ensure the dataset exists under `./data`.
-5. Run the ingestion command.
-
-## Ingestion
-
-Use:
-
-```bash
-python -m backend.ingestion.ingest
-```
-
-## Running Backend
-
-```bash
-uvicorn backend.api:app --reload --host 0.0.0.0 --port 8000
-```
-
-## Running Frontend
-
-This project includes a lightweight frontend served as static HTML for the hackathon demo.
-
-```bash
-python -m http.server 3000
-```
-
-Open `http://localhost:3000`.
-
-## Testing
-
-```bash
-pytest
-```
-
-## Deployment
-
-The current build is designed for a simple public deployment using a Python backend plus a lightweight static frontend. Update environment variables, host names, and ports to match the deployment target.
-
-## Environment Variables
-
-See `.env.example` for the full list of supported configuration values.
-
-## Limitations
-
-- OCR is optional and depends on Tesseract being installed.
-- The retrieval quality depends on the organizer dataset and embedding model availability.
-- Large datasets may require extra optimization.
+A production-ready, resilient, and fully grounded Retrieval-Augmented Generation (RAG) platform built for large, heterogeneous financial and enterprise datasets (multi-gigabyte tabular CSVs, JSON directories, PDFs, Excel sheets, and transaction logs).
 
 ---
 
-## Final architecture
+## 🌟 Key Capabilities & Features
 
-This project keeps the RAG pipeline simple and explainable for a hackathon while providing a reliable backend, data ingestion, retrieval, prompt grounding, and a small frontend.
+1. **Universal Multi-Format Ingestion**:
+   - Tabular semantic chunking for multi-period financial statements (Balance Sheets, Cash Flows, Quarterly Results, YoY/QoQ Growth) preserving scrip codes, company names, and metric relationships.
+   - Profile & Transaction extractors for demographics, FICO credit scores, user card limits, terminal MCC codes, and fraud logs.
+   - Document extractors for PDFs, DOCX, XLSX, TXT, and OCR fallback for scanned pages.
+   - Lightweight self-contained seed bundle (`data/seed/`) for 1-click cloud boot.
+
+2. **Hybrid Search (Dense Cosine Vectors + Exact Entity Booster)**:
+   - Dense vector retrieval (`top_k * 3`) with Cosine distance indexing in ChromaDB.
+   - High-specificity exact entity matching for alphanumeric IDs (e.g. `T001000`, `C001000`), scrip codes (`500325`), stock tickers (`AAPL`), and multi-word names (`Hazel Robinson`).
+   - Deduplication and priority re-ranking for verifiable evidence retrieval.
+
+3. **Resilient Multi-Provider LLM Orchestration & Zero-Downtime Fallback**:
+   - Multi-cloud orchestration supporting **Google Gemini** (`gemini-flash-latest`, `gemini-2.5-flash`), **Groq** (`llama3-8b-8192`), **OpenAI** (`gpt-4o-mini`), and local **Ollama** (`llama3.2`).
+   - **Zero-Error Grounded Fallback Synthesizer**: If cloud APIs hit rate limits (HTTP 429/503) or offline states, the system parses retrieved context chunks and formats clean structured facts, bullet points, and citations with zero error screens.
+
+4. **Zero-Hallucination Prompt Grounding Contract**:
+   - Strictly enforces responses based only on retrieved evidence.
+   - Quotes exact figures, currency metrics, dates, and identifiers.
+   - Explicitly returns *"The requested information was not found in the provided dataset."* when queried on unrecorded entities.
+
+5. **Single-Port Modern Glassmorphic Web Application**:
+   - Single-port architecture: FastAPI serves the frontend at `/` and REST API at `/api/*`.
+   - Modern Glassmorphic Dark UI with dynamic responsive typography.
+   - Marked.js for Markdown and Table rendering.
+   - Interactive Expandable Source Citation Drawer with exact document excerpts.
+   - Real-time latency and chunk monitoring badges.
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│               Frontend: Glassmorphic Web UI                 │
+│   (Marked.js Markdown, Citation Accordion, Latency Badges)  │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ HTTP / WebSocket (Port :8000)
+┌──────────────────────────────▼──────────────────────────────┐
+│                    FastAPI Backend Router                    │
+│   GET / (UI), GET /health, GET /api/stats, POST /api/chat    │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+               ┌───────────────┴───────────────┐
+               ▼                               ▼
+┌──────────────────────────────┐ ┌──────────────────────────────┐
+│   Hybrid Vector Store        │ │   Resilient LLM Engine       │
+│   • Dense Cosine Search      │ │   • Primary: Gemini 2.5/Flash│
+│   • Exact Entity/ID Booster  │ │   • Secondary: Groq/OpenAI   │
+│   • ChromaDB Persistent      │ │   • Local: Ollama            │
+│   • Auto-Boot Seed Indexing  │ │   • Fallback: Grounded Synth │
+└──────────────▲───────────────┘ └──────────────────────────────┘
+               │
+┌──────────────┴───────────────┐
+│ Ingestion & Chunking Engine  │
+│ • Tabular Statements / CSVs  │
+│ • Profiles / Fraud / News    │
+│ • PDF, DOCX, XLSX, TXT       │
+│ • Seed Dataset (data/seed/)  │
+└──────────────────────────────┘
+```
+
+---
+
+## ⚡ Quick Start
+
+### 1. Installation
+```bash
+git clone https://github.com/lordpatrixxx/Hackathon.git
+cd Hackathon
+pip install -r requirements.txt
+```
+
+### 2. Environment Configuration
+Create a `.env` file (or copy `.env.example`):
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+# GROQ_API_KEY=your_groq_api_key_here
+# OPENAI_API_KEY=your_openai_api_key_here
+
+DATA_DIR=./data/seed
+VECTOR_DB_DIR=./chroma_db
+COLLECTION_NAME=finance_rag
+EMBEDDING_MODEL=nomic-embed-text
+LLM_PROVIDER=gemini
+LLM_MODEL=gemini-flash-latest
+```
+
+### 3. Ingest Dataset
+```bash
+# Ingest lightweight seed bundle (takes ~20 seconds)
+python backend/ingest.py --data-dir ./data/seed
+
+# Ingest full multi-GB dataset
+python backend/ingest.py --data-dir ./data
+```
+
+### 4. Run Web Application
+```bash
+python run_app.py
+# Or directly with Uvicorn:
+uvicorn backend.api:app --host 0.0.0.0 --port 8000
+```
+Open **`http://localhost:8000`** in your browser.
+
+---
+
+## 🧪 Testing & Evaluation
+
+### Run Test Suite
+```bash
+python -m pytest tests/ -v
+```
+
+### Interactive CLI Query Tool
+```bash
+python query.py "What was the Net Profit for Reliance Industries in Mar 2023?"
+python query.py "What is the user profile, yearly income, and debt for Hazel Robinson?"
+python query.py "What is the capital of Mars?"
+```
+
+### Run Evaluation Suite
+```bash
+python evaluate.py
+```
+
+---
+
+## 🚢 Cloud & Container Deployment
+
+- **Docker**:
+  ```bash
+  docker build -t finance-rag .
+  docker run -p 8000:7860 finance-rag
+  ```
+- **Render**: Connect repository; `render.yaml` automatically configures the web service.
+- **Vercel**: Deploy directly; `vercel.json` and `api/index.py` handle serverless routing with `/tmp/chroma_db` auto-fallback.

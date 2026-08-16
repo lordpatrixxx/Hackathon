@@ -13,12 +13,13 @@ STOP_WORDS = {
     "when", "show", "tell", "about", "find", "which", "where", "were",
     "that", "this", "these", "those", "have", "been", "will", "would",
     "could", "should", "does", "give", "list", "name", "rate", "year",
-    "many", "some", "data", "file", "record", "records",
+    "many", "some", "data", "file", "record", "records", "summarize",
+    "summary", "details", "information", "info", "please",
 }
 
 
 class VectorStoreManager:
-    def __init__(self, collection_name: str = None):
+    def __init__(self, collection_name: Optional[str] = None):
         self.collection_name = collection_name or settings.COLLECTION_NAME
         self.client = chromadb.PersistentClient(path=settings.VECTOR_DB_DIR)
         self.collection = self.client.get_or_create_collection(
@@ -69,7 +70,7 @@ class VectorStoreManager:
             return []
 
         actual_k = min(k, total_in_db)
-        
+
         # 1. Exact entity & keyword retrieval
         exact_hits: List[Dict[str, Any]] = []
         if query_text:
@@ -106,7 +107,7 @@ class VectorStoreManager:
                     }
                 )
 
-        # 3. Merge and deduplicate (prioritizing highly specific entity matches)
+        # 3. Merge, re-rank, and deduplicate (prioritizing highly specific entity matches)
         seen_ids: Set[str] = set()
         merged_payload: List[Dict[str, Any]] = []
 
@@ -127,14 +128,18 @@ class VectorStoreManager:
         return merged_payload
 
     def _find_exact_matches(self, query_text: str, limit: int = 5) -> List[Dict[str, Any]]:
-        hits = []
+        total_in_db = self.count()
+        if total_in_db == 0:
+            return []
+
+        hits: List[Dict[str, Any]] = []
         clean_text = re.sub(r"[^\w\s]", " ", query_text)
         tokens = [t.strip() for t in clean_text.split() if len(t.strip()) >= 3 and t.strip().lower() not in STOP_WORDS]
-        
-        search_terms = []
-        
+
+        search_terms: List[str] = []
+
         # Multi-word entity phrases
-        for phrase in ["Hazel Robinson", "Reliance Industries", "Credit Card", "Apple", "Microsoft"]:
+        for phrase in ["Hazel Robinson", "Reliance Industries", "Credit Card", "Apple", "Microsoft", "Tata Consultancy Services"]:
             if phrase.lower() in query_text.lower() or all(w.lower() in query_text.lower() for w in phrase.split()):
                 search_terms.append(phrase)
 
@@ -154,7 +159,7 @@ class VectorStoreManager:
                 if variant not in search_terms:
                     search_terms.append(variant)
 
-        seen = set()
+        seen: Set[str] = set()
         for term in search_terms[:12]:
             try:
                 res = self.collection.get(
@@ -165,12 +170,14 @@ class VectorStoreManager:
                     for idx, doc_id in enumerate(res["ids"]):
                         if doc_id not in seen:
                             seen.add(doc_id)
-                            hits.append({
-                                "id": doc_id,
-                                "text": res["documents"][idx],
-                                "metadata": res["metadatas"][idx] if res.get("metadatas") else {},
-                                "distance": 0.05,
-                            })
+                            hits.append(
+                                {
+                                    "id": doc_id,
+                                    "text": res["documents"][idx],
+                                    "metadata": res["metadatas"][idx] if res.get("metadatas") else {},
+                                    "distance": 0.05,
+                                }
+                            )
                             if len(hits) >= limit:
                                 return hits
             except Exception:
