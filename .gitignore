@@ -35,12 +35,11 @@ env/
 *.key
 
 # Data & Vector Storage (Multi-GB datasets and indices)
-data/
 data/*
+!data/seed/
+!data/seed/**
 chroma_db/
 chroma_db/*
-*.csv
-*.jsonl
 *.parquet
 
 # Testing & Coverage

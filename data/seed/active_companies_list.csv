@@ -1,0 +1,101 @@
+,ScripCode,CompanyName,Industry,SecurityID,Status
+0,500325,RELIANCE INDUSTRIES LTD.,"Oil, Gas & Consumable Fuels",RELIANCE,Active
+1,532540,TATA CONSULTANCY SERVICES LTD.,Information Technology,TCS,Active
+2,500180,HDFC Bank Ltd,Financial Services,HDFCBANK,Active
+3,532174,ICICI BANK LTD.,Financial Services,ICICIBANK,Active
+4,500696,HINDUSTAN UNILEVER LTD.,Fast Moving Consumer Goods,HINDUNILVR,Active
+5,500209,INFOSYS LTD.,Information Technology,INFY,Active
+6,500875,ITC LTD.,Fast Moving Consumer Goods,ITC,Active
+7,500112,STATE BANK OF INDIA,Financial Services,SBIN,Active
+8,500010,HOUSING DEVELOPMENT FINANCE CORP.LTD.,Financial Services,HDFC,Active
+9,532454,BHARTI AIRTEL LTD.,Telecommunication,BHARTIARTL,Active
+10,500034,Bajaj Finance Limited,Financial Services,BAJFINANCE,Active
+11,500247,KOTAK MAHINDRA BANK LTD.,Financial Services,KOTAKBANK,Active
+12,543526,Life Insurance Corporation of India,Financial Services,LICI,Active
+13,500510,LARSEN & TOUBRO LTD.,Construction,LT,Active
+14,532281,HCL TECHNOLOGIES LTD.,Information Technology,HCLTECH,Active
+15,500820,ASIAN PAINTS LTD.,Consumer Durables,ASIANPAINT,Active
+16,532215,AXIS BANK LTD.,Financial Services,AXISBANK,Active
+17,512599,ADANI ENTERPRISES LTD.,Metals & Mining,ADANIENT,Active
+18,532500,MARUTI SUZUKI INDIA LTD.,Automobile and Auto Components,MARUTI,Active
+19,500114,Titan Company Limited,Consumer Durables,TITAN,Active
+20,524715,SUN PHARMACEUTICAL INDUSTRIES LTD.,Healthcare,SUNPHARMA,Active
+21,532978,BAJAJ FINSERV LTD.,Financial Services,BAJAJFINSV,Active
+22,540376,Avenue Supermarts Ltd,Consumer Services,DMART,Active
+23,532538,ULTRATECH CEMENT LTD.,Construction Materials,ULTRACEMCO,Active
+24,507685,WIPRO LTD.,Information Technology,WIPRO,Active
+25,500312,Oil and Natural Gas Corporation Ltd,"Oil, Gas & Consumable Fuels",ONGC,Active
+26,500790,NESTLE INDIA LTD.,Fast Moving Consumer Goods,NESTLEIND,Active
+27,500570,TATA MOTORS LTD.,Automobile and Auto Components,TATAMOTORS,Active
+28,532555,NTPC LTD.,Power,NTPC,Active
+29,500228,JSW STEEL LTD.,Metals & Mining,JSWSTEEL,Active
+30,532898,POWER GRID CORPORATION OF INDIA LTD.,Power,POWERGRID,Active
+31,500520,MAHINDRA & MAHINDRA LTD.,Automobile and Auto Components,M&M,Active
+32,541450,Adani Green Energy Ltd,Power,ADANIGREEN,Active
+33,532921,ADANI PORTS AND SPECIAL ECONOMIC ZONE LTD.,Services,ADANIPORTS,Active
+34,533278,COAL INDIA LTD.,"Oil, Gas & Consumable Fuels",COALINDIA,Active
+35,540005,LTIMindtree Ltd,Information Technology,LTIM,Active
+36,500188,HINDUSTAN ZINC LTD.,Metals & Mining,HINDZINC,Active
+37,500470,TATA STEEL LTD.,Metals & Mining,TATASTEEL,Active
+38,500331,PIDILITE INDUSTRIES LTD.,Chemicals,PIDILITIND,Active
+39,532977,BAJAJ AUTO LTD.,Automobile and Auto Components,BAJAJ-AUTO,Active
+40,530965,INDIAN OIL CORPORATION LTD.,"Oil, Gas & Consumable Fuels",IOC,Active
+41,500550,SIEMENS LTD.,Capital Goods,SIEMENS,Active
+42,540777,HDFC Life Insurance Company Ltd,Financial Services,HDFCLIFE,Active
+43,540719,SBI Life Insurance Company Ltd,Financial Services,SBILIFE,Active
+44,532868,DLF LTD.,Realty,DLF,Active
+45,500300,GRASIM INDUSTRIES LTD.,Construction Materials,GRASIM,Active
+46,500825,BRITANNIA INDUSTRIES LTD.,Fast Moving Consumer Goods,BRITANNIA,Active
+47,500295,Vedanta Limited,Metals & Mining,VEDL,Active
+48,532755,TECH MAHINDRA LTD.,Information Technology,TECHM,Active
+49,540180,Varun Beverages Ltd,Fast Moving Consumer Goods,VBL,Active
+50,532424,GODREJ CONSUMER PRODUCTS LTD.,Fast Moving Consumer Goods,GODREJCP,Active
+51,539254,Adani Transmission Ltd,Power,ADANITRANS,Active
+52,541154,Hindustan Aeronautics Ltd,Capital Goods,HAL,Active
+53,505200,EICHER MOTORS LTD.,Automobile and Auto Components,EICHERMOT,Active
+54,533096,ADANI POWER LTD.,Power,ADANIPOWER,Active
+55,532187,INDUSIND BANK LTD.,Financial Services,INDUSINDBK,Active
+56,532134,BANK OF BARODA,Financial Services,BANKBARODA,Active
+57,500096,DABUR INDIA LTD.,Fast Moving Consumer Goods,DABUR,Active
+58,500440,HINDALCO INDUSTRIES LTD.,Metals & Mining,HINDALCO,Active
+59,532488,DIVI'S LABORATORIES LTD.,Healthcare,DIVISLAB,Active
+60,539448,InterGlobe Aviation Ltd,Services,INDIGO,Active
+61,542066,Adani Total Gas Ltd,"Oil, Gas & Consumable Fuels",ATGL,Active
+62,500387,SHREE CEMENT LTD.,Construction Materials,SHREECEM,Active
+63,511243,Cholamandalam Investment and Finance Company Ltd,Financial Services,CHOLAFIN,Active
+64,543066,SBI Cards and Payment Services Ltd,Financial Services,SBICARD,Active
+65,500425,AMBUJA CEMENTS LTD.,Construction Materials,AMBUJACEM,Active
+66,500002,ABB India Limited,Capital Goods,ABB,Active
+67,517354,HAVELLS INDIA LTD.,Consumer Durables,HAVELLS,Active
+68,500049,BHARAT ELECTRONICS LTD.,Capital Goods,BEL,Active
+69,500547,BHARAT PETROLEUM CORPORATION LTD.,"Oil, Gas & Consumable Fuels",BPCL,Active
+70,500490,BAJAJ HOLDINGS & INVESTMENT LTD.,Financial Services,BAJAJHLDNG,Active
+71,500087,CIPLA LTD.,Healthcare,CIPLA,Active
+72,500124,DR.REDDY'S LABORATORIES LTD.,Healthcare,DRREDDY,Active
+73,503806,SRF LTD.,Chemicals,SRF,Active
+74,500800,Tata Consumer Products Ltd,Fast Moving Consumer Goods,TATACONSUM,Active
+75,532155,GAIL (INDIA) LTD.,"Oil, Gas & Consumable Fuels",GAIL,Active
+76,531642,MARICO LTD.,Fast Moving Consumer Goods,MARICO,Active
+77,500400,TATA POWER CO.LTD.,Power,TATAPOWER,Active
+78,508869,APOLLO HOSPITALS ENTERPRISE LTD.,Healthcare,APOLLOHOSP,Active
+79,540133,ICICI Prudential Life Insurance Company Ltd,Financial Services,ICICIPRULI,Active
+80,509480,BERGER PAINTS INDIA LTD.,Consumer Durables,BERGEPAINT,Active
+81,532432,UNITED SPIRITS LTD.,Fast Moving Consumer Goods,UNITDSPR,Active
+82,532343,TVS MOTOR COMPANY LTD.,Automobile and Auto Components,TVSMOTOR,Active
+83,543458,Adani Wilmar Ltd,Fast Moving Consumer Goods,AWL,Active
+84,500116,IDBI BANK LTD.,Financial Services,IDBI,Active
+85,500420,TORRENT PHARMACEUTICALS LTD.,Healthcare,TORNTPHARM,Active
+86,500093,CG Power and Industrial Solutions Ltd,Capital Goods,CGPOWER,Active
+87,500530,BOSCH LTD.,Automobile and Auto Components,BOSCHLTD,Active
+88,543320,Zomato Ltd,Consumer Services,ZOMATO,Active
+89,517334,Samvardhana Motherson International Ltd,Automobile and Auto Components,MOTHERSON,Active
+90,532461,PUNJAB NATIONAL BANK,Financial Services,PNB,Active
+91,500182,HERO MOTOCORP LTD.,Automobile and Auto Components,HEROMOTOCO,Active
+92,532483,CANARA BANK,Financial Services,CANBK,Active
+93,543220,Max Healthcare Institute Ltd,Healthcare,MAXHEALTH,Active
+94,500850,INDIAN HOTELS CO.LTD.,Consumer Services,INDHOTEL,Active
+95,500251,TRENT LTD.,Consumer Services,TRENT,Active
+96,543904,Mankind Pharma Ltd,Healthcare,MANKIND,Active
+97,540716,ICICI Lombard General Insurance Company Ltd,Financial Services,ICICIGI,Active
+98,512070,UPL Limited,Chemicals,UPL,Active
+99,532286,JINDAL STEEL & POWER LTD.,Metals & Mining,JINDALSTEL,Active

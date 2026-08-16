@@ -38,7 +38,13 @@ def check_and_ensure_index() -> bool:
     if count > 0:
         return True
     try:
-        ingested = ingest_documents()
+        target_dir = settings.DATA_DIR
+        if not os.path.exists(target_dir) or not os.listdir(target_dir):
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            seed_dir = os.path.join(base_dir, "data", "seed")
+            if os.path.exists(seed_dir) and os.listdir(seed_dir):
+                target_dir = seed_dir
+        ingested = ingest_documents(data_dir=target_dir)
         return ingested > 0
     except Exception as exc:
         print(f"Auto-ingestion error: {exc}")
