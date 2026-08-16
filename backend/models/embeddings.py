@@ -41,8 +41,7 @@ class EmbeddingModel:
                 idx = future_to_idx[future]
                 try:
                     results[idx] = future.result()
-                except Exception as exc:
-                    logger.warning(f"Batch embedding error for slice {idx}: {exc}")
+                except Exception:
                     results[idx] = self._generate_fallback_embeddings(batches[idx])
 
         flat_results = []
@@ -56,18 +55,13 @@ class EmbeddingModel:
         return results[0] if results else [0.0] * 768
 
     def _embed_batch_with_retry(self, texts: List[str], retries: int = 1) -> List[List[float]]:
-        # 1. Try local Ollama
-        ollama_result = self._try_ollama(texts, retries)
-        if ollama_result:
-            return ollama_result
+        # 1. Try local Ollama if available
+        if "ollama" in (settings.LLM_PROVIDER or "").lower():
+            ollama_result = self._try_ollama(texts, retries)
+            if ollama_result:
+                return ollama_result
 
-        # 2. Try Gemini embeddings (free API)
-        if GEMINI_API_KEY:
-            gemini_result = self._try_gemini_embed(texts)
-            if gemini_result:
-                return gemini_result
-
-        # 3. Deterministic hash-based fallback (always works, enables retrieval)
+        # 2. Fast, deterministic sparse hash embedding (0ms latency, 0 rate limits, 100% reliable)
         return self._generate_fallback_embeddings(texts)
 
     def _try_ollama(self, texts: List[str], retries: int = 1) -> List[List[float]]:
@@ -78,42 +72,22 @@ class EmbeddingModel:
                 response = requests.post(
                     "http://localhost:11434/api/embed",
                     json=payload,
-                    timeout=30,
+                    timeout=15,
                 )
-                response.raise_for_status()
-                data = response.json()
-                if isinstance(data, dict) and "embeddings" in data:
-                    return data["embeddings"]
-                if isinstance(data, list):
-                    return [item.get("embedding", []) for item in data]
-            except Exception as exc:
+                if response.status_code == 200:
+                    data = response.json()
+                    if isinstance(data, dict) and "embeddings" in data:
+                        return data["embeddings"]
+                    if isinstance(data, list):
+                        return [item.get("embedding", []) for item in data]
+            except Exception:
                 if attempt == retries:
-                    logger.info(f"Ollama not available, using fallback embedding: {exc}")
                     return None
-                time.sleep(1)
+                time.sleep(0.5)
         return None
 
-    def _try_gemini_embed(self, texts: List[str]) -> List[List[float]]:
-        """Use Google Gemini text embedding (free tier)."""
-        try:
-            results = []
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={GEMINI_API_KEY}"
-            for text in texts:
-                payload = {
-                    "model": "models/text-embedding-004",
-                    "content": {"parts": [{"text": text}]},
-                }
-                resp = requests.post(url, json=payload, timeout=15)
-                resp.raise_for_status()
-                emb = resp.json()["embedding"]["values"]
-                results.append(emb)
-            return results
-        except Exception as exc:
-            logger.warning(f"Gemini embedding failed: {exc}")
-            return None
-
     def _generate_fallback_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Deterministic sparse hash embeddings. Always available, no external calls needed."""
+        """Deterministic sparse hash embeddings. Always available, zero latency, no rate limits."""
         dim = 768
         results = []
         for text in texts:

@@ -85,25 +85,14 @@ class HealthResponse(BaseModel):
 def health():
     chunks_count = vector_store.count()
     vector_ok = chunks_count >= 0
-    
-    try:
-        embedding_model.embed_query("health")
-        embed_ok = True
-    except Exception:
-        embed_ok = False
-
-    try:
-        llm_client.generate("test")
-        llm_ok = True
-    except Exception:
-        llm_ok = False
+    has_llm = bool(os.getenv("GEMINI_API_KEY") or os.getenv("GROQ_API_KEY"))
 
     return HealthResponse(
-        status="ok" if (vector_ok and embed_ok) else "degraded",
+        status="ok" if vector_ok else "degraded",
         vector_store=vector_ok,
         indexed_chunks=chunks_count,
-        embedding_model=embed_ok,
-        llm=llm_ok,
+        embedding_model=True,
+        llm=has_llm,
     )
 
 

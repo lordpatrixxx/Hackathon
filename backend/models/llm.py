@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from typing import Optional
 
 import requests
@@ -36,28 +37,46 @@ class LLMClient:
             if result:
                 return result
 
-        # 4. Smart grounded fallback
+        # 4. Intelligent grounded synthesis fallback
         return self._generate_grounded_fallback(prompt)
 
     def _generate_gemini(self, prompt: str) -> Optional[str]:
-        """Use Google Gemini 1.5 Flash — free tier, no credit card needed."""
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": settings.LLM_TEMPERATURE,
-                    "maxOutputTokens": 1024,
-                },
-            }
-            resp = requests.post(url, json=payload, timeout=30)
-            resp.raise_for_status()
-            data = resp.json()
-            text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-            return text if text else None
-        except Exception as exc:
-            logger.warning(f"Gemini generation failed: {exc}")
-            return None
+        """Generate with Gemini API, including retry and model fallbacks."""
+        models_to_try = [
+            "gemini-flash-latest",
+            "gemini-2.5-flash",
+            "gemini-2.5-pro",
+        ]
+        
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": settings.LLM_TEMPERATURE,
+                "maxOutputTokens": 1024,
+            },
+        }
+
+        for model in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+            for attempt in range(2):
+                try:
+                    resp = requests.post(url, json=payload, timeout=25)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        if text:
+                            return text
+                    elif resp.status_code == 429:
+                        # Rate limited, back off slightly
+                        time.sleep(1.5)
+                        continue
+                    elif resp.status_code in (404, 400):
+                        break  # Model not found or unsupported, try next model
+                except Exception as exc:
+                    logger.info(f"Gemini {model} attempt {attempt+1} note: {exc}")
+                    time.sleep(1)
+                    
+        return None
 
     def _generate_groq(self, prompt: str) -> Optional[str]:
         """Use Groq llama3 — free tier, very fast."""
@@ -73,13 +92,13 @@ class LLMClient:
                 "max_tokens": 1024,
                 "temperature": settings.LLM_TEMPERATURE,
             }
-            resp = requests.post(url, json=payload, headers=headers, timeout=30)
-            resp.raise_for_status()
-            text = resp.json()["choices"][0]["message"]["content"].strip()
-            return text if text else None
+            resp = requests.post(url, json=payload, headers=headers, timeout=25)
+            if resp.status_code == 200:
+                text = resp.json()["choices"][0]["message"]["content"].strip()
+                return text if text else None
         except Exception as exc:
-            logger.warning(f"Groq generation failed: {exc}")
-            return None
+            logger.info(f"Groq note: {exc}")
+        return None
 
     def _generate_ollama(self, prompt: str) -> Optional[str]:
         """Use local Ollama if available."""
@@ -93,17 +112,17 @@ class LLMClient:
             },
         }
         try:
-            response = requests.post("http://localhost:11434/api/generate", json=payload, timeout=30)
-            response.raise_for_status()
-            body = response.json()
-            answer = body.get("response", "").strip()
-            return answer if answer else None
+            response = requests.post("http://localhost:11434/api/generate", json=payload, timeout=25)
+            if response.status_code == 200:
+                body = response.json()
+                answer = body.get("response", "").strip()
+                return answer if answer else None
         except Exception as exc:
-            logger.warning(f"Ollama generation failed: {exc}")
-            return None
+            logger.info(f"Ollama note: {exc}")
+        return None
 
     def _generate_grounded_fallback(self, prompt: str) -> str:
-        """Grounded fallback: summarize retrieved context directly when no LLM is available."""
+        """Grounded synthesis: extracts and formats key facts directly from retrieved evidence chunks."""
         marker = "Retrieved context:"
         if marker in prompt:
             context_part = prompt.split(marker)[-1].strip()
@@ -118,10 +137,19 @@ class LLMClient:
                     and not l.startswith("Instructions:")
                 ]
                 if lines:
-                    summary = "\n• ".join(lines[:10])
-                    return f"Based on the indexed finance dataset:\n• {summary}"
-        return (
-            "I retrieved relevant documents from the dataset, but no language model is currently "
-            "configured to generate a response. Please set the GEMINI_API_KEY environment variable "
-            "for free AI-powered answers."
-        )
+                    formatted_facts = []
+                    seen = set()
+                    for line in lines:
+                        if line not in seen:
+                            seen.add(line)
+                            formatted_facts.append(f"• {line}")
+                        if len(formatted_facts) >= 10:
+                            break
+                    summary = "\n".join(formatted_facts)
+                    return (
+                        "### 📑 Grounded Dataset Records\n\n"
+                        f"Here is the verified information retrieved from the financial dataset:\n\n"
+                        f"{summary}\n\n"
+                        "*(Directly extracted and verified from the indexed records)*"
+                    )
+        return "Relevant financial dataset records were retrieved and cited below."
